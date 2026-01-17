@@ -1,97 +1,114 @@
-# 🔐 AWS IAM Multi-User Security Lab (RBAC + MFA + CloudTrail)
+# 🔐 AWS IAM Multi-User Security Lab (Least Privilege RBAC + MFA + CloudTrail)
 
-This project simulates a real AWS organization by creating multiple IAM users with different roles and enforcing **least privilege** permissions using IAM groups and policies. Login security is strengthened with **MFA**, and user activity is monitored using **AWS CloudTrail**.
+This lab simulates a real-world AWS environment with multiple identities and security controls. It implements **role-based access control (RBAC)** using IAM groups and policies, enforces **least privilege**, secures console access with **MFA**, and validates monitoring/auditability using **AWS CloudTrail**.
 
-The lab proves that restricted users are blocked from performing unauthorized actions and that security analysts can investigate those actions through audit logs.
-
----
-
-## 🎯 Objectives
-
-- Build a multi-user AWS IAM environment using **role-based access control (RBAC)**
-- Secure logins with **Multi-Factor Authentication (MFA)**
-- Enforce **least privilege** permissions for restricted users
-- Enable **AWS CloudTrail** logging for audit visibility
-- Generate `AccessDenied` events and verify them in CloudTrail
+The objective is to demonstrate that restricted actions are denied by IAM policy enforcement and that security personnel can investigate attempted actions using CloudTrail event logs.
 
 ---
 
-## 🏗️ Lab Setup
+## 🧠 What This Lab Demonstrates
 
-### IAM Users
-
-| Role | IAM User | Purpose |
-|------|----------|---------|
-| Admin | `lab-admin` | Full access for user/group/policy management |
-| Security Analyst | `lab-analyst` | Read-only visibility for auditing and investigation |
-| Intern | `lab-intern` | Restricted user with limited permissions |
+- Identity and Access Management design using **IAM Users, Groups, and Policies**
+- **Separation of duties** (Admin vs Analyst vs Intern)
+- Enforcement of **least privilege access**
+- **Multi-factor authentication (MFA)** for console login protection
+- Security investigation using **AWS CloudTrail** event history
+- Validation of controls through real denied actions (`AccessDenied`)
 
 ---
 
-## 🔑 Security Controls Implemented
+## 🏗️ Environment Overview
+
+### IAM Identities
+
+| Role | IAM User | Access Model |
+|------|----------|--------------|
+| Administrator | `lab-admin` | Full access to manage identities, permissions, and configuration |
+| Security Analyst | `lab-analyst` | Audit/read visibility to investigate activity (no admin changes) |
+| Intern / Restricted User | `lab-intern` | Limited permissions; blocked from privileged actions |
+
+### Access Strategy
+- Permissions are assigned primarily through **IAM Groups**
+- AWS-managed policies are used where appropriate
+- A restricted permission model is applied to the intern user to prevent high-impact actions
+
+---
+
+## 🔐 Security Controls Implemented
 
 ### ✅ Role-Based Access Control (RBAC)
-IAM permissions are assigned using groups/policies to simulate a real enterprise environment.
+IAM groups were created to represent organizational roles:
+- Admin Group: full access for configuration and access management
+- Analyst Group: audit-focused visibility for investigation tasks
+- Intern Group: limited scope access designed for observation only
 
-### ✅ MFA-Secured Logins
-MFA was enabled for IAM users to strengthen authentication and protect against credential compromise.
+### ✅ MFA Enforcement
+MFA was enabled on AWS console users to reduce risk of unauthorized access due to password compromise.
 
-### ✅ Least Privilege Permissions
-The intern account was intentionally restricted from performing write actions such as:
-- Creating S3 buckets
-- Modifying IAM resources
-- Making changes to cloud services
+### ✅ Least Privilege Access Design
+Restricted identities were prevented from performing write/admin actions across AWS services, including S3 and IAM.
 
 ---
 
-## 🧪 Testing & Validation
+## 🧪 Control Validation (Testing)
 
-A restricted user (`lab-intern`) attempted an unauthorized action:
+A restricted user (`lab-intern`) attempted an unauthorized action that requires write permissions:
 
 - **Event Name:** `CreateBucket`
+- **AWS Service:** Amazon S3
 - **Event Source:** `s3.amazonaws.com`
 - **Result:** `AccessDenied`
 
-This confirms IAM permissions were successfully enforced.
+This confirms IAM policy enforcement is functioning as intended.
 
 ---
 
-## 🕵️ Audit Investigation (CloudTrail)
+## 🕵️ Audit Logging & Investigation (CloudTrail)
 
-A security analyst user (`lab-analyst`) reviewed AWS CloudTrail **Event history** to investigate intern activity.
+### Logging
+AWS CloudTrail was enabled to record management activity across the account.
+
+### Investigation Workflow (SOC-style)
+While signed in as `lab-analyst`, CloudTrail **Event history** was reviewed to investigate restricted user activity.
 
 Lookup attribute used:
 - `User name = lab-intern`
 
-This demonstrates a real SOC-style workflow:
-1. User attempts restricted action
-2. AWS denies action using IAM policy enforcement
-3. CloudTrail records the event
-4. Analyst investigates and confirms activity
+This allowed tracking attempted actions, timestamps, source IP details, and authorization failures.
+
+---
+
+## 📌 Key Outcome
+
+This lab proves:
+- IAM policies successfully enforce least privilege controls
+- Unauthorized actions are blocked and logged
+- A security analyst can investigate user behavior using centralized audit logs
 
 ---
 
 ## 💡 Skills Demonstrated
 
 - AWS IAM (Users, Groups, Policies)
-- Role-Based Access Control (RBAC)
-- Least Privilege access design
-- MFA login security
-- AWS CloudTrail auditing & investigation
+- RBAC and separation of duties design
+- Least privilege access enforcement
+- MFA authentication controls
+- CloudTrail event investigation & auditing
+- Security monitoring mindset (SOC fundamentals)
 
 ---
 
-## ✅ Resume Bullet Points
+## ✅ Resume Bullet Points (Ready-to-use)
 
-- Built a multi-user AWS IAM lab using IAM users/groups to enforce **role-based access control (RBAC)** and **least-privilege permissions**
-- Secured AWS console logins with **MFA** and validated policy enforcement through unauthorized actions resulting in `AccessDenied`
-- Enabled and analyzed **AWS CloudTrail** event logs to investigate user activity and verify security control effectiveness
+- Implemented role-based access control (RBAC) in AWS using IAM users/groups/policies to enforce least-privilege access and separation of duties
+- Secured AWS Management Console logins using multi-factor authentication (MFA) to reduce risk of credential-based compromise
+- Enabled and analyzed AWS CloudTrail audit logs to investigate restricted user activity and validate enforcement through `AccessDenied` events (e.g., S3 `CreateBucket`)
 
 ---
 
 ## 🚀 Future Improvements
 
-- Send CloudTrail logs to CloudWatch Logs
-- Create alerts for repeated `AccessDenied` events
-- Enforce MFA-required IAM policies for sensitive actions
-- Restrict permissions to specific resources (ARN-level restrictions)
+- Send CloudTrail logs to CloudWatch Logs and create alerting rules for repeated authorization failures
+- Create IAM policy conditions requiring MFA (`aws:MultiFactorAuthPresent`) for sensitive actions
+- Add resource-level restrictions using ARNs instead of wildcard resources where possible
+- Build a basic incident response playbook for unauthorized activity detection
